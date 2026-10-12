@@ -38,7 +38,7 @@ codex "このプロジェクトをレビューして"
 | **プロセスのアクセス制限** | Codexが起動したローカルコマンドにも拒否ルールを適用する |
 | **適用できなければ停止** | 不正な設定や未対応の起動方法では、エラーで起動を止める |
 
-> **現在はmacOS・zsh向けの実験的なMVPです。** Codex Desktopは未対応です。npmレジストリには未公開です。[GitHub Release](https://github.com/kyurururn/codexignore/releases/tag/v0.4.0)の配布パッケージ、または以下の手順でソースから導入できます。
+> **現在はmacOS・zsh向けの実験的なMVPです。** Codex Desktopは未対応です。npmレジストリには未公開です。[GitHub Release](https://github.com/kyurururn/codexignore/releases/tag/v0.4.1)の配布パッケージ、または以下の手順でソースから導入できます。
 
 ## 導入する
 
@@ -163,12 +163,12 @@ GitHub Releaseから最新版を取得し、SHA-256チェックサムとパッ�
 - 更新は明示的なコマンドで行います。会話の起動時に自動でダウンロードすることはありません。
 
 <details>
-<summary>v0.3.0以前からの移行（初回だけ）</summary>
+<summary>v0.4.0以前からの移行（初回だけ）</summary>
 
-旧版には `update` コマンドがないため、一度だけv0.4.0以降のパッケージをインストールして連携を更新してください。
+旧版には `update` コマンドがないため、一度だけv0.4.1以降のパッケージをインストールして連携を更新してください。
 
 ```sh
-npm install -g ./codexignore-0.4.0.tgz
+npm install -g ./codexignore-0.4.1.tgz
 codexignore install
 ```
 
@@ -243,7 +243,7 @@ npm run pack:release     # dist/ にパッケージとSHA256SUMSを作成
 作成したパッケージは、次のようにインストールできます。ファイル名は対象バージョンに置き換えてください。
 
 ```sh
-npm install -g ./dist/codexignore-0.4.0.tgz
+npm install -g ./dist/codexignore-0.4.1.tgz
 codexignore install
 ```
 

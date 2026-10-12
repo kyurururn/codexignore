@@ -73,7 +73,8 @@ export function activatePackage(root, source, version, beforeSwitch = () => {}) 
 }
 
 async function download(url, limit, fetchImpl) {
-  const response = await fetchImpl(url, { signal: AbortSignal.timeout(30000), headers: { 'User-Agent': 'codexignore-updater', Accept: 'application/octet-stream' } });
+  const accept = url.startsWith('https://api.github.com/') ? 'application/vnd.github+json' : 'application/octet-stream';
+  const response = await fetchImpl(url, { signal: AbortSignal.timeout(30000), headers: { 'User-Agent': 'codexignore-updater', Accept: accept } });
   if (!response.ok) throw new Error(`download failed (HTTP ${response.status})`);
   const chunks = [];
   let size = 0;
