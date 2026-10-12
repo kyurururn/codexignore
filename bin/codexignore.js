@@ -1,26 +1,37 @@
 #!/usr/bin/env node
 import path from 'node:path';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadRules, matchingRules } from '../src/rules.js';
 import { install, uninstall } from '../src/install.js';
+import { installationRoot, update } from '../src/update.js';
 
 const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 const help = `Usage: codexignore <command>
 
   install                   Enable automatic .codexignore loading in zsh (one time)
   uninstall                 Remove the zsh integration
+  update                    Download and activate the newest GitHub release
   check [--root DIR]         Validate .codexignore syntax
   explain [--root DIR] PATH  Show matching deny rules
 
 After installation, create .codexignore and start a conversation with codex.
 No init or run command is needed. Supports macOS and zsh.`;
 
-try {
+const current = path.join(installationRoot(), 'current');
+const ownRoot = fileURLToPath(new URL('../', import.meta.url));
+if (process.argv[2] !== 'install' && existsSync(current) && realpathSync(current) !== realpathSync(ownRoot)) {
+  await import(pathToFileURL(path.join(realpathSync(current), 'bin', 'codexignore.js')).href);
+} else try {
   const args = process.argv.slice(2);
   const command = args.shift();
   if (!command || ['--help', '-h'].includes(command)) console.log(help);
   else if (['--version', '-V'].includes(command)) console.log(version);
-  else if (['install', 'uninstall'].includes(command)) {
+  else if (command === 'update') {
+    if (args.length) throw new Error('update does not accept arguments');
+    const result = await update();
+    console.log(result.updated ? `Updated codexignore ${result.previousVersion} → ${result.version}. The next codex launch will use it; no terminal restart is needed.` : `codexignore ${result.version} is already up to date.`);
+  } else if (['install', 'uninstall'].includes(command)) {
     if (args.length) throw new Error(`${command} does not accept arguments`);
     const result = command === 'install' ? install() : uninstall();
     console.log(`${command === 'install' ? 'Installed' : 'Removed'} codex integration in ${result.rc}`);

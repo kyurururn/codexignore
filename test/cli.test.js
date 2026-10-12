@@ -19,7 +19,7 @@ test('CLI validates and explains manually created rules; no init or run needed',
     assert.equal(run('explain', '../outside').status, 1);
     assert.equal(run('init').status, 1);
     assert.equal(run('run').status, 1);
-    assert.match(run('--version').stdout, /^0\.3\.0/);
+    assert.match(run('--version').stdout, /^0\.4\.0/);
     writeFileSync(path.join(root, '.codexignore'), '# No rules yet');
     assert.equal(run('check').status, 0);
     writeFileSync(path.join(root, '.codexignore'), '!secret');

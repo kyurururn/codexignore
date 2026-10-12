@@ -1,11 +1,11 @@
 {
   "name": "codexignore",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "UNLICENSED",
   "type": "module",
   "description": "Run Codex CLI inside a macOS sandbox using .codexignore rules",
   "bin": { "codexignore": "bin/codexignore.js" },
   "files": ["bin/", "src/", "README.md", ".codexignore.example"],
-  "scripts": { "test": "node --test", "test:sandbox": "CODEXIGNORE_SANDBOX_TEST=1 node --test test/sandbox.test.js", "prepack": "npm test", "pack:release": "mkdir -p dist && npm pack --pack-destination dist" },
+  "scripts": { "test": "node --test", "test:sandbox": "CODEXIGNORE_SANDBOX_TEST=1 node --test test/sandbox.test.js", "prepack": "npm test", "pack:release": "node scripts/pack-release.js" },
   "engines": { "node": ">=22" }
 }

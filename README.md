@@ -38,7 +38,7 @@ codex "このプロジェクトをレビューして"
 | **プロセスのアクセス制限** | Codexが起動したローカルコマンドにも拒否ルールを適用する |
 | **適用できなければ停止** | 不正な設定や未対応の起動方法では、エラーで起動を止める |
 
-> **現在はmacOS・zsh向けの実験的なMVPです。** Codex Desktopは未対応です。npmレジストリには未公開のため、以下の手順でGitHubから導入してください。
+> **現在はmacOS・zsh向けの実験的なMVPです。** Codex Desktopは未対応です。npmレジストリには未公開です。[GitHub Release](https://github.com/kyurururn/codexignore/releases/tag/v0.4.0)の配布パッケージ、または以下の手順でソースから導入できます。
 
 ## 導入する
 
@@ -149,15 +149,34 @@ codexignore check --root /path/to/project
 
 ## 更新・解除
 
-ソースから導入した場合は、クローンしたリポジトリで更新します。
+更新は、どの導入方法でもこの1コマンドです。
 
 ```sh
-git pull --ff-only
-npm install -g .
+codexignore update
+```
+
+GitHub Releaseから最新版を取得し、SHA-256チェックサムとパッケージの内容を検証してから適用します。最新版ならそのまま終了します。現在は実験版のため、公開されたPre-releaseも更新対象です。
+
+- `.codexignore` や `.zshrc` の再設定は不要です。
+- **次回の `codex` 起動から新版が使われます。** ターミナルの再起動は不要で、進行中の会話はその版で続きます。
+- ダウンロード・検証・切り替えが失敗した場合は、旧版を維持します。
+- 更新は明示的なコマンドで行います。会話の起動時に自動でダウンロードすることはありません。
+
+<details>
+<summary>v0.3.0以前からの移行（初回だけ）</summary>
+
+旧版には `update` コマンドがないため、一度だけv0.4.0以降のパッケージをインストールして連携を更新してください。
+
+```sh
+npm install -g ./codexignore-0.4.0.tgz
 codexignore install
 ```
 
-更新後は新しいターミナルを開いてください。
+新しいターミナルを開いた後は、`codexignore update` だけで更新できます。`.codexignore` の変更は不要です。
+
+ソースから導入した場合は、クローンしたリポジトリで `git pull --ff-only`、`npm install -g .`、`codexignore install` を順に実行してください。
+
+</details>
 
 連携を解除する場合：
 
@@ -165,7 +184,7 @@ codexignore install
 codexignore uninstall
 ```
 
-新しいターミナルを開くと、本来の `codex` コマンドに戻ります。現在のターミナルだけ先に戻す場合は、`unfunction codex` を実行してください。
+新しいターミナルを開くと、本来の `codex` コマンドに戻ります。現在のターミナルだけ先に戻す場合は、`unfunction codex codexignore` を実行してください。
 
 ## 仕組み
 
@@ -184,11 +203,15 @@ Codex CLI ＋ ローカル子プロセス
 
 ### シェルへの導入
 
-`codexignore install` は `~/.local/share/codexignore/` にプログラムを保存し、`.zshrc` に `codex` 関数を追加します。`ZDOTDIR` を設定している場合は、そのディレクトリの `.zshrc` が対象です。
+`codexignore install` は `~/.local/share/codexignore/` にプログラムを保存し、`.zshrc` に `codex` と `codexignore` の関数を追加します。`ZDOTDIR` を設定している場合は、そのディレクトリの `.zshrc` が対象です。
 
 最初の変更時に `.zshrc.codexignore-backup` を作成します。再実行しても設定を重複追加せず、解除時は他の設定を保持します。既存のCodex実行ファイルとCodexの設定ファイルは編集しません。
 
 関数からはPATH上の本来のCodex CLIを直接起動します。この呼び出しはシェル関数を経由しないため、再帰しません。
+
+### 更新の切り替え
+
+実行用プログラムは版ごとのディレクトリに保存し、固定の起動用スクリプトが `current` の指す版を読み込みます。更新時は新しい版を準備してから、シンボリックリンクを1回のrenameで切り替えます。旧版のディレクトリは保持します。npmで導入したCLIも、連携先の版へ処理を転送します。
 
 ### ファイルアクセスの制限
 
@@ -207,8 +230,10 @@ API通信のため外側サンドボックスのネットワークを有効に�
 ```sh
 npm test                 # CLI・自動読み込み・導入と解除
 npm run test:sandbox     # 実際のmacOSサンドボックスで拒否を検証
-npm run pack:release     # dist/ に配布パッケージを作成
+npm run pack:release     # dist/ にパッケージとSHA256SUMSを作成
 ```
+
+更新のテストでは、設定の保持、最新版への切り替え、旧CLIからの転送、通信・検証・切り替え失敗時の旧版維持を確認します。
 
 サンドボックスのテストは、読み取り・変更・削除・rename・新規作成・symlink経由のアクセス拒否を確認します。モデルは呼び出しません。別のサンドボックス内では実行できないことがあります。
 
@@ -218,12 +243,14 @@ npm run pack:release     # dist/ に配布パッケージを作成
 作成したパッケージは、次のようにインストールできます。ファイル名は対象バージョンに置き換えてください。
 
 ```sh
-npm install -g ./dist/codexignore-0.3.0.tgz
+npm install -g ./dist/codexignore-0.4.0.tgz
 codexignore install
 ```
 
 インストール時の自動スクリプトはありません。zsh連携は明示的な `install` コマンドで有効にします。
 
 </details>
+
+GitHub Releaseには、同じビルドの `codexignore-<version>.tgz` と `SHA256SUMS` を両方添付してください。更新処理はGitHubの公開Releaseを参照し、npmの公開は必要ありません。
 
 現在のライセンス表記は `UNLICENSED` です。
