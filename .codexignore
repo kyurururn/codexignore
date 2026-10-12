@@ -1,0 +1,5 @@
+# Local secrets: deny reads and writes when launching through this wrapper.
+.env
+.env.*
+secrets/
+**/*.pem

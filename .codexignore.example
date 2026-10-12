@@ -1,0 +1,8 @@
+# Deny reads and writes at every depth
+.env
+.env.*
+secrets/
+**/*.pem
+
+# Root-only path
+/private/
