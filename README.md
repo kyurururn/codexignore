@@ -1,5 +1,3 @@
-<div align="center">
-
 # codexignore
 
 ### Codexに渡さないファイルを、自分で決める。
@@ -12,8 +10,6 @@
 ![Experimental](https://img.shields.io/badge/status-experimental-orange)
 
 [導入する](#導入する) · [ルールを書く](#ルールを書く) · [対応範囲](#対応範囲) · [仕組み](#仕組み)
-
-</div>
 
 ---
 
