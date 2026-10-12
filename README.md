@@ -1,25 +1,54 @@
+<div align="center">
+
 # codexignore
 
-**`.codexignore` を置いて、いつもどおり `codex` を起動する。**
+### Codexに任せる範囲を、ファイルで決める。
 
-Codex CLIによるファイルの読み書きを、プロジェクトごとのルールで制限するツールです。初回の導入後は、プロジェクトごとの初期化や専用の起動コマンドは不要です。
+`.codexignore` を置いて、いつもどおり `codex` を起動する。
 
-> 現在は **macOS・zsh向けの実験的なMVP** です。Codex Desktopには適用されません。npmレジストリには未公開です。
+![macOS](https://img.shields.io/badge/platform-macOS-black)
+![zsh](https://img.shields.io/badge/shell-zsh-4EAA25)
+![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933)
+![Experimental](https://img.shields.io/badge/status-experimental-orange)
 
-## クイックスタート
+[導入する](#導入する) · [ルールを書く](#ルールを書く) · [対応範囲](#対応範囲) · [仕組み](#仕組み)
 
-### 1. インストールする
+</div>
 
-Node.js **22以上** と Codex CLI **0.162.0以上** が必要です。Codex CLIへのログインを済ませてから、配布パッケージをインストールします。
+---
 
-```sh
-npm install -g ./codexignore-0.3.0.tgz
-codexignore install
+コードは読んでほしい。でも、`.env` や秘密鍵には触れてほしくない。
+
+**codexignoreは、Codex CLIのファイルアクセスに境界を作るツールです。** プロジェクトに書いた拒否ルールを起動時に読み込み、Codexとローカル子プロセスの読み書きをmacOSのサンドボックスで制限します。
+
+```gitignore
+# .codexignore
+.env
+.env.*
+secrets/
+**/*.pem
 ```
 
-導入は初回だけです。完了したら **新しいターミナルを開いてください**。
+```sh
+codex "このプロジェクトをレビューして"
+```
 
-ソースから導入する場合は、次の手順でも利用できます。
+初回の連携後は、プロジェクトごとの `init` も、専用の `run` コマンドも不要です。
+
+| | codexignoreでできること |
+| --- | --- |
+| **いつもの起動方法** | `codex` と `codex exec` で自動的にルールを読み込む |
+| **プロジェクトごとの設定** | `.codexignore` で、触れてほしくないパスを指定する |
+| **プロセスのアクセス制限** | Codexが起動したローカルコマンドにも拒否ルールを適用する |
+| **適用できなければ停止** | 不正な設定や未対応の起動方法では、エラーで起動を止める |
+
+> **現在はmacOS・zsh向けの実験的なMVPです。** Codex Desktopは未対応です。npmレジストリには未公開のため、以下の手順でGitHubから導入してください。
+
+## 導入する
+
+必要なもの：**macOS / zsh / Node.js 22以上 / Codex CLI 0.162.0以上**。Codex CLIへのログインを先に済ませてください。
+
+### 1. 初回だけ、連携をインストール
 
 ```sh
 git clone https://github.com/kyurururn/codexignore.git
@@ -28,65 +57,57 @@ npm install -g .
 codexignore install
 ```
 
-### 2. `.codexignore` を作成する
+完了したら、**新しいターミナルを開きます**。
 
-プロジェクトのルートに、拒否したいファイルやディレクトリを書きます。
+### 2. 対象プロジェクトに `.codexignore` を作成
+
+プロジェクトのルートに、拒否したいパスを記載します。
 
 ```gitignore
 # 環境ファイル
 .env
-.env.*
+.env.local
 
-# 秘密情報を置くディレクトリ
+# 秘密情報
 secrets/
-
-# すべての階層のPEMファイル
 **/*.pem
 ```
 
-`.env.*` は `.env.example` にも一致します。必要なファイルまで除外しないよう、ルールを調整してください。
-
-### 3. 普段どおり起動する
+### 3. いつもどおり `codex` を起動
 
 ```sh
 codex
 ```
 
-プロンプトの指定、非対話実行、別のディレクトリからの起動にも対応します。
+読み込んだ `.codexignore` の場所とルール数が表示されれば、連携が動作しています。プロンプトの指定、非対話実行、ディレクトリの指定も使えます。
 
 ```sh
-codex "プロジェクトをレビューして"
+codex "テストを追加して"
 codex exec "テストを実行して"
 codex -C /path/to/project
 ```
 
-起動時に、読み込んだ `.codexignore` の場所とルール数が表示されます。
+## ルールを書く
 
-## 読み込みのルール
+パスの基準は、`.codexignore` があるディレクトリです。拒否したパスとその配下へのアクセスを制限します。
 
-- 現在のディレクトリから親へ探し、最も近い `.codexignore` を使います。`-C` / `--cd` を指定した場合は、そのディレクトリから探します。
-- Gitリポジトリの境界を越えて探索しません。子ディレクトリから起動しても、作業ディレクトリは維持します。
-- 設定がない場合は、引数をそのまま本来のCodex CLIへ渡します。空の設定ファイルも利用できます。
-- 設定が不正、オプションが未対応、または制限を適用できない場合は、エラーで起動を止めます。
-
-設定を変更したら、会話を終了して `codex` を起動し直してください。
-
-## パターンの書き方
-
-パスは `.codexignore` のあるディレクトリを基準に解釈します。
-
-| パターン | 対象 |
+| パターン | 拒否する対象 |
 | --- | --- |
 | `.env` | すべての階層にある `.env` |
-| `.env.*` | `.env.local` など、すべての階層の一致する名前 |
-| `secrets/` | すべての階層にある `secrets` とその子孫 |
-| `/private/` | ルート直下の `private` とその子孫 |
-| `config/private` | ルートから見た `config/private` とその子孫 |
+| `.env.*` | すべての階層にある `.env.local` など |
+| `secrets/` | すべての階層にある `secrets` とその配下 |
+| `/private/` | ルート直下の `private` とその配下 |
+| `config/private` | ルートから見た `config/private` とその配下 |
 | `config/*.pem` | `config` 直下のPEMファイル |
 | `**/*.pem` | すべての階層のPEMファイル |
 | `keys/?.key` | `keys` 直下の `a.key` など、名前が1文字のファイル |
 
-空行と `#` で始まる行は無視し、前後の空白を取り除きます。`*` はパス要素内の任意の文字列、`?` は1文字、独立したパス要素の `**` は複数の階層に一致します。
+空行と `#` で始まる行は無視します。`*` はパス要素内の任意の文字列、`?` は1文字、独立したパス要素の `**` は複数の階層に一致します。各行の前後の空白は取り除きます。
+
+**`.env.*` は `.env.example` にも一致します。** 共有したいテンプレートがある場合は、`.env.local` などの名前を個別に指定してください。
+
+<details>
+<summary>gitignoreとの違い</summary>
 
 完全なgitignore互換ではありません。
 
@@ -94,53 +115,55 @@ codex -C /path/to/project
 - 末尾 `/` のルールも、同名の通常ファイルを拒否します。
 - 複数の `.codexignore` はマージしません。`.gitignore` も読み込みません。
 
-## 設定の確認
+</details>
 
-必要に応じて、構文や一致するルールを確認できます。
+### 設定を確認する
 
 ```sh
-codexignore check
-codexignore explain .env
+codexignore check             # 構文を確認
+codexignore explain .env      # 一致する拒否ルールを表示
 codexignore check --root /path/to/project
 ```
 
-| コマンド | 用途 |
-| --- | --- |
-| `check` | 設定ファイルの構文を検証する |
-| `explain PATH` | パスに一致する拒否ルールを表示する |
+これらはルールを確認するコマンドです。実際のサンドボックスによる保護を検証するものではありません。
 
-どちらも、実際のサンドボックスによる保護を検証するコマンドではありません。
+### どの設定が読み込まれる？
+
+起動するディレクトリから親へ探し、**最も近い `.codexignore`** を使います。`-C` / `--cd` を指定した場合は、そのディレクトリが起点です。探索はGitリポジトリの境界で止まります。
+
+子ディレクトリから起動しても、作業ディレクトリは維持します。設定がなければ、本来のCodex CLIへ引数をそのまま渡します。空の設定ファイルも使えます。
+
+**ルールを変更したら、会話を終了して `codex` を起動し直してください。**
 
 ## 対応範囲
 
 | 起動方法 | 自動適用 |
 | --- | --- |
 | 連携を導入したzshでの `codex` / `codex exec` | 対応 |
-| `codex -C /path/to/project` | 対応 |
+| 同じzshでの `codex -C /path/to/project` | 対応 |
 | Codex Desktopからの会話開始 | 未対応 |
 | Codexの実行ファイルを絶対パスで起動 | 対象外 |
-| `command codex` や、連携を読み込まない非対話シェル | 対象外 |
+| `command codex` / 連携を読み込まない非対話シェル | 対象外 |
 
 通常の対話と `exec` に対応します。`--model` / `-m`、`--image` / `-i`、`--search`、`--no-alt-screen`、`--json` などを利用できます。
 
 `.codexignore` がある場合、remote、resume、fork、worktree、設定上書き、サンドボックス無効化などの未対応操作は起動を拒否します。`--help`、`--version`、`login`、`logout`、`completion`、`update` は本来のCLIへ直接渡します。
 
-制限の対象は、Codexとそのローカル子プロセスによるファイルアクセスです。リモートMCP、コネクター、ブラウザー、ファイルの別コピー、環境変数や会話にすでに入っている秘密は対象外です。
+制限するのは、**Codexとそのローカル子プロセスによるファイルアクセス**です。リモートMCP、コネクター、ブラウザー、ファイルの別コピー、環境変数や会話にすでに入っている秘密は対象外です。
 
 ## 更新・解除
 
-### 更新する
-
-新しい配布パッケージをインストールし、連携を更新します。
+ソースから導入した場合は、クローンしたリポジトリで更新します。
 
 ```sh
-npm install -g ./codexignore-0.3.0.tgz
+git pull --ff-only
+npm install -g .
 codexignore install
 ```
 
-ファイル名は受け取ったバージョンに置き換えてください。更新後は新しいターミナルを開きます。
+更新後は新しいターミナルを開いてください。
 
-### 連携を解除する
+連携を解除する場合：
 
 ```sh
 codexignore uninstall
@@ -149,6 +172,19 @@ codexignore uninstall
 新しいターミナルを開くと、本来の `codex` コマンドに戻ります。現在のターミナルだけ先に戻す場合は、`unfunction codex` を実行してください。
 
 ## 仕組み
+
+```text
+いつもの codex コマンド
+        ↓
+zshの連携が .codexignore を読み込む
+        ↓
+拒否ルール付きのmacOSサンドボックス
+        ↓
+Codex CLI ＋ ローカル子プロセス
+```
+
+<details>
+<summary>シェルへの導入とファイルアクセス制限の詳細</summary>
 
 ### シェルへの導入
 
@@ -166,25 +202,32 @@ Codexとローカル子プロセスを、拒否ルール付きの `codex sandbox
 
 API通信のため外側サンドボックスのネットワークを有効にし、管理者が設定したmanaged requirementsも権限の解決に含めます。
 
-関連仕様：[Codex Permissions](https://learn.chatgpt.com/docs/permissions)
+</details>
 
 ## 開発・配布
 
-外部依存はありません。リポジトリ内で次のコマンドを実行できます。
+外部依存はありません。
 
 ```sh
-# CLI・自動読み込み・導入と解除のテスト
-npm test
-
-# 実際のmacOSサンドボックスによる拒否を検証
-npm run test:sandbox
-
-# 配布パッケージを作成
-npm run pack:release
+npm test                 # CLI・自動読み込み・導入と解除
+npm run test:sandbox     # 実際のmacOSサンドボックスで拒否を検証
+npm run pack:release     # dist/ に配布パッケージを作成
 ```
 
-配布物は `dist/codexignore-0.3.0.tgz` です。インストール時の自動スクリプトはなく、zsh連携は明示的な `install` コマンドで有効にします。
+サンドボックスのテストは、読み取り・変更・削除・rename・新規作成・symlink経由のアクセス拒否を確認します。モデルは呼び出しません。別のサンドボックス内では実行できないことがあります。
 
-テストでは、一時的なホームへの導入、自動読み込み、設定なしの引数転送、`-C`、重複導入、解除を確認します。サンドボックスのテストでは、読み取り・変更・削除・rename・新規作成・symlink経由のアクセス拒否を確認します。モデルは呼び出しません。すでに別のサンドボックス内にいる場合、サンドボックスのテストを実行できないことがあります。
+<details>
+<summary>配布パッケージからの導入</summary>
 
-ライセンス表記は現在 `UNLICENSED` です。npm公開前に、パッケージ名・公開先アカウント・ライセンスを決める必要があります。
+作成したパッケージは、次のようにインストールできます。ファイル名は対象バージョンに置き換えてください。
+
+```sh
+npm install -g ./dist/codexignore-0.3.0.tgz
+codexignore install
+```
+
+インストール時の自動スクリプトはありません。zsh連携は明示的な `install` コマンドで有効にします。
+
+</details>
+
+現在のライセンス表記は `UNLICENSED` です。
