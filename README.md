@@ -2,7 +2,7 @@
 
 # codexignore
 
-### Codexに任せる範囲を、ファイルで決める。
+### Codexに渡さないファイルを、自分で決める。
 
 `.codexignore` を置いて、いつもどおり `codex` を起動する。
 
@@ -19,7 +19,7 @@
 
 コードは読んでほしい。でも、`.env` や秘密鍵には触れてほしくない。
 
-**codexignoreは、Codex CLIのファイルアクセスに境界を作るツールです。** プロジェクトに書いた拒否ルールを起動時に読み込み、Codexとローカル子プロセスの読み書きをmacOSのサンドボックスで制限します。
+**codexignoreなら、Codexに渡したくないファイルを `.codexignore` に指定できます。** 起動時にルールを読み込み、指定したファイルへのCodex CLIとローカル子プロセスの読み書きをmacOSのサンドボックスで制限します。
 
 ```gitignore
 # .codexignore
